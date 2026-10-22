@@ -28,7 +28,7 @@ TRANSLATIONS = {
         "lang": "Язык:", "ru": "Русский", "en": "English", "lang_sys": "Системный",
         "src_title": "📁  Папка с сохранениями игры", "src_sub": "по умолчанию: %LOCALAPPDATA%\\GeometryDash",
         "bk_title": "💾  Папка GD_Backups", "bk_sub": "место, где будут храниться резервные копии",
-        "btn_pick": "Выбрать", "btn_open": "Обзор", "btn_save": "💾   СОХРАНИТЬ  (игра → копия)", "btn_load": "📂   ЗАГРУЗИТЬ  (копия → игра)",
+        "btn_pick": "Выбрать", "btn_open": "Обзор", "btn_save": "💾   СОХРАНИТЬ  (игра → копия)", "btn_load": "📂   ЗАГРУЗИТЬ (копия → игра)",
         "files_title": "📄  Какие файлы задействовать", "files_sub": "поставь галочку у файлов, которые нужно копировать",
         "btn_all": "Выбрать все", "btn_none": "Снять все", "log_title": "📝  Журнал операций",
         "f_cc1": "Основной прогресс игры", "f_cc2": "Дубликат прогресса", "f_cl1": "Локальные уровни",
@@ -189,7 +189,6 @@ class GD_SaveManager:
         w, h = min(1040, sw - 120), min(880, sh - 100)
         self.root.geometry(f"{w}x{h}+{(sw - w) // 2}+{(sh - h) // 3}")
 
-        # Считываем системные настройки ОДИН РАЗ при запуске
         self.sys_lang = get_system_language()
         self.sys_theme = get_system_theme()
 
@@ -205,7 +204,6 @@ class GD_SaveManager:
 
         self.log_lines = []
         self.log_text = None
-        self._current_theme = THEMES["light"]
         self.T = TRANSLATIONS["ru"]
 
         self._build_ui()
@@ -239,6 +237,10 @@ class GD_SaveManager:
             var.set(val)
             self._save_config()
             self._build_ui()
+
+    def _on_amoled_toggle(self):
+        self._save_config()
+        self._build_ui()
 
     def _button(self, parent, theme, text, command, bg_key="primary", fg="white", font_size=10, pad=8, bold=True):
         bg = theme[bg_key]
@@ -299,7 +301,8 @@ class GD_SaveManager:
 
         amoled_enabled = self.theme_mode_var.get() != "light"
         amoled_container = tk.Frame(settings_bar, bg=theme["bg"]); amoled_container.pack(side="left", padx=(8, 0))
-        amoled_cb = ThemedCheckbox(amoled_container, self.amoled_var, theme, size=16, bg=theme["bg"], disabled=not amoled_enabled, command=lambda: self.root.after_idle(lambda: self._change_setting(self.amoled_var, self.amoled_var.get())))
+        # ИСПРАВЛЕНИЕ: Теперь вызываем _on_amoled_toggle через after_idle
+        amoled_cb = ThemedCheckbox(amoled_container, self.amoled_var, theme, size=16, bg=theme["bg"], disabled=not amoled_enabled, command=lambda: self.root.after_idle(self._on_amoled_toggle))
         amoled_cb.pack(side="left")
         amoled_lbl = tk.Label(amoled_container, text="AMOLED", bg=theme["bg"], fg=theme["text"] if amoled_enabled else theme["muted"], font=_font(9), cursor="hand2" if amoled_enabled else "arrow")
         amoled_lbl.pack(side="left", padx=(4, 0))
@@ -401,7 +404,7 @@ class GD_SaveManager:
                 messagebox.showerror(self._t("msg_err"), f"{self._t('err_no_dir_src')}\n{path}")
                 self._log(f"❌ {self._t('err_no_dir_src')} {path}", "error"); return
         try:
-            if os.name == "nt": subprocess.Popen(["explorer.exe", "/n," + path])
+            if os.name == "nt": subprocess.Popen(f'explorer.exe /n,"{path}"')
             elif sys.platform == "darwin": subprocess.Popen(["open", "-n", path])
             else: subprocess.Popen(["xdg-open", path])
             self._log(f"{self._t('log_open')} {path}", "muted")
