@@ -198,7 +198,6 @@ HTML_CONTENT = """
             "sfxlibrary.dat": "f_sfx", "musiclibrary.dat": "f_mus", "CCPlatformerSave.dat": "f_plat"
         };
 
-        // Считываем системные настройки ОДИН РАЗ при запуске
         const SYSTEM_LANG = navigator.language.startsWith('ru') ? 'ru' : 'en';
         const SYSTEM_THEME = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 
@@ -209,25 +208,29 @@ HTML_CONTENT = """
         setInterval(() => { fetch('/api/ping', { method: 'POST' }).catch(e => {}); }, 100);
 
         async function init() {
-            const res = await fetch('/api/config');
-            config = await res.json();
-            
-            document.getElementById('source-path').value = config.source_dir || "";
-            document.getElementById('backup-path').value = config.backup_dir || "";
-            document.getElementById('lang-select').value = config.language || "system";
-            
-            selectedFiles = config.selected_files || {};
-            if (!config.selected_files) Object.keys(fileDescriptions).forEach(k => selectedFiles[k] = true);
+            try {
+                const res = await fetch('/api/config');
+                config = await res.json();
+                
+                document.getElementById('source-path').value = config.source_dir || "";
+                document.getElementById('backup-path').value = config.backup_dir || "";
+                document.getElementById('lang-select').value = config.language || "system";
+                
+                selectedFiles = config.selected_files || {};
+                if (!config.selected_files) Object.keys(fileDescriptions).forEach(k => selectedFiles[k] = true);
 
-            detectLanguage();
-            renderFiles();
-            setThemeMode(config.theme_mode || 'system', true);
-            document.getElementById('cb-amoled').checked = config.amoled || false;
-            applyTheme();
-            applyLanguage();
-            
-            log(t('log_src') + document.getElementById('source-path').value, 'muted');
-            log(t('log_dst') + document.getElementById('backup-path').value, 'muted');
+                detectLanguage();
+                renderFiles();
+                setThemeMode(config.theme_mode || 'system', true);
+                document.getElementById('cb-amoled').checked = config.amoled || false;
+                applyTheme();
+                applyLanguage();
+                
+                log(t('log_src') + document.getElementById('source-path').value, 'muted');
+                log(t('log_dst') + document.getElementById('backup-path').value, 'muted');
+            } catch (e) {
+                log("❌ Ошибка загрузки конфигурации: " + e.message, "error");
+            }
         }
 
         function detectLanguage() {
@@ -300,7 +303,7 @@ HTML_CONTENT = """
 
         function applyTheme() {
             let mode = config.theme_mode || 'system';
-            if (mode === 'system') mode = SYSTEM_THEME; // Используем зафиксированную системную тему
+            if (mode === 'system') mode = SYSTEM_THEME;
             
             document.body.className = '';
             if (mode === 'dark' && config.amoled) document.body.className = 'amoled';
@@ -316,33 +319,43 @@ HTML_CONTENT = """
             config.source_dir = document.getElementById('source-path').value;
             config.backup_dir = document.getElementById('backup-path').value;
             config.selected_files = selectedFiles;
-            await fetch('/api/config', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(config)
-            });
+            try {
+                await fetch('/api/config', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(config)
+                });
+            } catch (e) {}
         }
 
         document.getElementById('source-path').addEventListener('change', saveConfig);
         document.getElementById('backup-path').addEventListener('change', saveConfig);
 
         async function pickFolder(type) {
-            const res = await fetch('/api/pick_folder', { method: 'POST' });
-            const data = await res.json();
-            if (data.path) {
-                if (type === 'source') document.getElementById('source-path').value = data.path;
-                if (type === 'backup') document.getElementById('backup-path').value = data.path;
-                saveConfig();
+            try {
+                const res = await fetch('/api/pick_folder', { method: 'POST' });
+                const data = await res.json();
+                if (data.path) {
+                    if (type === 'source') document.getElementById('source-path').value = data.path;
+                    if (type === 'backup') document.getElementById('backup-path').value = data.path;
+                    saveConfig();
+                }
+            } catch (e) {
+                log("❌ Ошибка выбора папки: " + e.message, "error");
             }
         }
 
         async function openFolder(type) {
             let path = type === 'source' ? document.getElementById('source-path').value : document.getElementById('backup-path').value;
             if (!path) return log(t('msg_err_pick'), "error");
-            const res = await fetch('/api/open_folder', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ path: path, type: type })
-            });
-            const data = await res.json();
-            if (data.error) log("❌ " + data.error, "error");
-            else log(t('log_open') + data.path, "muted");
+            try {
+                const res = await fetch('/api/open_folder', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ path: path, type: type })
+                });
+                const data = await res.json();
+                if (data.error) log("❌ " + data.error, "error");
+                else log(t('log_open') + data.path, "muted");
+            } catch (e) {
+                log("❌ Ошибка: " + e.message, "error");
+            }
         }
 
         async function doAction(direction) {
@@ -354,27 +367,31 @@ HTML_CONTENT = """
             const title = direction === 'save' ? t('log_save_t') : t('log_load_t');
             log(`[${new Date().toLocaleString()}]  ${title}`, "header");
 
-            const res = await fetch('/api/action', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ direction: direction, source: source, backup: backup, files: Object.keys(selectedFiles).filter(k => selectedFiles[k]) })
-            });
-            const data = await res.json();
-            if (data.error) return log("❌ " + data.error, "error");
+            try {
+                const res = await fetch('/api/action', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ direction: direction, source: source, backup: backup, files: Object.keys(selectedFiles).filter(k => selectedFiles[k]) })
+                });
+                const data = await res.json();
+                if (data.error) return log("❌ " + data.error, "error");
 
-            log(`${t('log_copy_src')} ${data.src_dir}`, "muted");
-            log(`${t('log_copy_dst')} ${data.dst_dir}`, "muted");
+                log(`${t('log_copy_src')} ${data.src_dir}`, "muted");
+                log(`${t('log_copy_dst')} ${data.dst_dir}`, "muted");
 
-            if (data.succeeded.length) {
-                log(t('log_success', {n: data.succeeded.length}), "success");
-                data.succeeded.forEach(f => log(`   • ${f}`, "success"));
-            }
-            if (data.skipped.length) {
-                log(t('log_skip', {n: data.skipped.length}), "warning");
-                data.skipped.forEach(item => log(`   • ${item[0]} — ${item[1]}`, "warning"));
-            }
-            if (data.failed.length) {
-                log(t('log_fail', {n: data.failed.length}), "error");
-                data.failed.forEach(item => log(`   • ${item[0]} — ${item[1]}`, "error"));
+                if (data.succeeded.length) {
+                    log(t('log_success', {n: data.succeeded.length}), "success");
+                    data.succeeded.forEach(f => log(`   • ${f}`, "success"));
+                }
+                if (data.skipped.length) {
+                    log(t('log_skip', {n: data.skipped.length}), "warning");
+                    data.skipped.forEach(item => log(`   • ${item[0]} — ${item[1]}`, "warning"));
+                }
+                if (data.failed.length) {
+                    log(t('log_fail', {n: data.failed.length}), "error");
+                    data.failed.forEach(item => log(`   • ${item[0]} — ${item[1]}`, "error"));
+                }
+            } catch (e) {
+                log("❌ Ошибка: " + e.message, "error");
             }
         }
 
@@ -438,11 +455,15 @@ class WebHandler(http.server.BaseHTTPRequestHandler):
                     except Exception as e: return self._json_response({"error": f"Failed to create folder: {e}"})
                 else: return self._json_response({"error": "Folder does not exist."})
             try:
-                if os.name == "nt": subprocess.Popen(["explorer.exe", "/n," + path])
-                elif sys.platform == "darwin": subprocess.Popen(["open", "-n", path])
-                else: subprocess.Popen(["xdg-open", path])
+                if os.name == "nt":
+                    subprocess.Popen(f'explorer.exe /n,"{path}"')
+                elif sys.platform == "darwin":
+                    subprocess.Popen(["open", "-n", path])
+                else:
+                    subprocess.Popen(["xdg-open", path])
                 self._json_response({"path": path})
-            except Exception as e: self._json_response({"error": str(e)})
+            except Exception as e:
+                self._json_response({"error": str(e)})
         elif self.path == '/api/action':
             direction = data.get('direction'); source = data.get('source', '').strip()
             backup = data.get('backup', '').strip(); files = data.get('files', [])
