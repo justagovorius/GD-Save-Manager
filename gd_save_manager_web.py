@@ -117,7 +117,6 @@ HTML_CONTENT = """
                 <div class="custom-cb"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
                 <span style="font-size: 13px;">AMOLED</span>
             </label>
-            <button class="btn btn-chip" style="margin-left: 10px; background: transparent; border: 1px solid var(--border);" onclick="exitApp()" data-i18n="btn_exit">Выход</button>
         </div>
     </div>
 
@@ -165,7 +164,7 @@ HTML_CONTENT = """
         const translations = {
             "ru": {
                 app_title: "GD Save Manager", app_sub: "Локальное резервное копирование сохранений GD и GDPS",
-                lang: "Язык:", lang_sys: "Системный", theme: "Тема:", theme_light: "Светлая", theme_dark: "Тёмная", theme_sys: "Системная", btn_exit: "Выход",
+                lang: "Язык:", lang_sys: "Системный", theme: "Тема:", theme_light: "Светлая", theme_dark: "Тёмная", theme_sys: "Системная",
                 src_title: "📁 Папка с сохранениями игры", src_sub: "по умолчанию: %LOCALAPPDATA%\\GeometryDash", btn_pick: "Выбрать", btn_open: "Обзор",
                 bk_title: "💾 Папка GD_Backups", bk_sub: "место, где будут храниться резервные копии",
                 files_title: "📄 Какие файлы задействовать", files_sub: "поставь галочку у файлов, которые нужно копировать", btn_all: "Выбрать все", btn_none: "Снять все",
@@ -179,7 +178,7 @@ HTML_CONTENT = """
             },
             "en": {
                 app_title: "GD Save Manager", app_sub: "Local backup tool for GD and GDPS saves",
-                lang: "Language:", lang_sys: "System", theme: "Theme:", theme_light: "Light", theme_dark: "Dark", theme_sys: "System", btn_exit: "Exit",
+                lang: "Language:", lang_sys: "System", theme: "Theme:", theme_light: "Light", theme_dark: "Dark", theme_sys: "System",
                 src_title: "📁 Game Save Folder", src_sub: "default: %LOCALAPPDATA%\\GeometryDash", btn_pick: "Select", btn_open: "Browse",
                 bk_title: "💾 GD_Backups Folder", bk_sub: "where backup files will be stored",
                 files_title: "📄 Files to include", files_sub: "check the files you want to copy", btn_all: "Select All", btn_none: "Deselect All",
@@ -395,13 +394,6 @@ HTML_CONTENT = """
             }
         }
 
-        async function exitApp() {
-            if(confirm(t('btn_exit') + "?")) {
-                await fetch('/api/exit');
-                document.body.innerHTML = "<div style='text-align:center; padding:50px; font-family:sans-serif;'><h1>Server stopped</h1><p>You can close this tab.</p></div>";
-            }
-        }
-
         function log(msg, type='') {
             const area = document.getElementById('log');
             const span = document.createElement('span');
@@ -483,8 +475,6 @@ class WebHandler(http.server.BaseHTTPRequestHandler):
                 except PermissionError as e: failed.append((filename, f"permission denied (file in use?): {e}"))
                 except Exception as e: failed.append((filename, f"error: {e}"))
             self._json_response({"succeeded": succeeded, "skipped": skipped, "failed": failed, "src_dir": src_dir, "dst_dir": dst_dir})
-        elif self.path == '/api/exit':
-            self._json_response({"status": "ok"}); threading.Thread(target=self.server.shutdown, daemon=True).start()
         else: self.send_error(404)
 
     def _json_response(self, obj):
