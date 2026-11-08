@@ -165,7 +165,7 @@ HTML_CONTENT = """
             "ru": {
                 app_title: "GD Save Manager", app_sub: "Локальное резервное копирование сохранений GD и GDPS",
                 lang: "Язык:", lang_sys: "Системный", theme: "Тема:", theme_light: "Светлая", theme_dark: "Тёмная", theme_sys: "Системная",
-                src_title: "📁 Папка с сохранениями игры", src_sub: "по умолчанию: %LOCALAPPDATA%\\GeometryDash", btn_pick: "Выбрать", btn_open: "Обзор",
+                src_title: "📁 Папка с сохранениями игры", src_sub: "по умолчанию: %LOCALAPPDATA%\\\\GeometryDash", btn_pick: "Выбрать", btn_open: "Обзор",
                 bk_title: "💾 Папка GD_Backups", bk_sub: "место, где будут храниться резервные копии",
                 files_title: "📄 Какие файлы задействовать", files_sub: "поставь галочку у файлов, которые нужно копировать", btn_all: "Выбрать все", btn_none: "Снять все",
                 btn_save: "💾 СОХРАНИТЬ (игра → копия)", btn_load: "📂 ЗАГРУЗИТЬ (копия → игра)", log_title: "📝 Журнал операций",
@@ -179,7 +179,7 @@ HTML_CONTENT = """
             "en": {
                 app_title: "GD Save Manager", app_sub: "Local backup tool for GD and GDPS saves",
                 lang: "Language:", lang_sys: "System", theme: "Theme:", theme_light: "Light", theme_dark: "Dark", theme_sys: "System",
-                src_title: "📁 Game Save Folder", src_sub: "default: %LOCALAPPDATA%\\GeometryDash", btn_pick: "Select", btn_open: "Browse",
+                src_title: "📁 Game Save Folder", src_sub: "default: %LOCALAPPDATA%\\\\GeometryDash", btn_pick: "Select", btn_open: "Browse",
                 bk_title: "💾 GD_Backups Folder", bk_sub: "where backup files will be stored",
                 files_title: "📄 Files to include", files_sub: "check the files you want to copy", btn_all: "Select All", btn_none: "Deselect All",
                 btn_save: "💾 SAVE (game → backup)", btn_load: "📂 LOAD (backup → game)", log_title: "📝 Operation Log",
