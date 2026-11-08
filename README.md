@@ -1,6 +1,6 @@
 # 🛡️ GD Save Manager (Desktop & Web)
 
-[🇬🇧 English](#english) | [🇷🇺 Русский](#русский)
+[🇬🇧 English](#-english) | [🇷🇺 Русский](#-русский)
 
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue?style=for-the-badge)
 ![Python](https://img.shields.io/badge/python-3.8%2B-green?style=for-the-badge)
